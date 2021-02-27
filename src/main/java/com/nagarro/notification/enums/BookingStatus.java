@@ -1,0 +1,12 @@
+package com.nagarro.notification.enums;
+
+public enum BookingStatus {
+	PROCESSING,	
+	PAYMENT_SUCCESS,
+	PAYMENT_FAILED,
+	WORKER_ASSIGNED,
+	ACCEPTED_BY_WORKER,
+	REJECTED_BY_WORKER,
+	COMPLETED,
+	CANCELLED_BY_CUSTOMER
+}
