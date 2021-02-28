@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.nagarro.notification.domain.BookingEntity;
+import com.nagarro.notification.domain.CustomerEntity;
 import com.nagarro.notification.domain.NotificationEntity;
 import com.nagarro.notification.domain.WorkerEntity;
 import com.nagarro.notification.dto.ResponseTO;
@@ -59,13 +60,21 @@ public class NotificationServiceImpl implements NotificationService {
 		BookingEntity bookingEntity = getBookingEntityById(bookingId);
 		WorkerEntity workerEntity = getWorkerEntityById(bookingEntity.getWorkerId());
 
-		NotificationEntity notificationEntity = new NotificationEntity();
-		notificationEntity.setUserId(bookingEntity.getCustomerId());
-		String text = "Your booking of " + bookingEntity.getServiceName() + " with booking id " + bookingEntity.getId()
+		NotificationEntity customerNotification = new NotificationEntity();
+		customerNotification.setUserId(bookingEntity.getCustomerId());
+		String customertext = "Your booking of " + bookingEntity.getServiceName() + " with booking id " + bookingEntity.getId()
 				+ " has been Accepted by our service provider " + workerEntity.getName() + " (email : "
 				+ workerEntity.getEmail()+")";
-		notificationEntity.setText(text);
-		customerNotificationsList.add(notificationEntity);
+		customerNotification.setText(customertext);
+		customerNotificationsList.add(customerNotification);
+		
+		NotificationEntity workerNotification = new NotificationEntity();
+		CustomerEntity customerEntity = getCustomerEntityById(bookingEntity.getCustomerId());
+		workerNotification.setUserId(bookingEntity.getWorkerId());
+		String workertext = "Your booking has been scheduled for customer : " + customerEntity.getName()
+		+ " Email(" + customerEntity.getEmail()+")"+ " for service " + bookingEntity.getServiceName();
+		workerNotification.setText(workertext);
+		workerNotificationsList.add(workerNotification);
 	}
 	
 	@JmsListener(destination = "BookingRejectedByWorker")
@@ -109,6 +118,15 @@ public class NotificationServiceImpl implements NotificationService {
 		String workerUrl = instance.getHomePageUrl() + "/workers/" + workerId;
 		ResponseEntity<ResponseTO<WorkerEntity>> workerResponse = restTemplate.exchange(workerUrl, HttpMethod.GET, null,
 				new ParameterizedTypeReference<ResponseTO<WorkerEntity>>() {
+				});
+		return workerResponse.getBody().getData();
+	}
+	
+	private CustomerEntity getCustomerEntityById(Integer customerID) {
+		InstanceInfo instance = eurekaClient.getNextServerFromEureka("apigateway", false);
+		String workerUrl = instance.getHomePageUrl() + "/customers/" + customerID;
+		ResponseEntity<ResponseTO<CustomerEntity>> workerResponse = restTemplate.exchange(workerUrl, HttpMethod.GET, null,
+				new ParameterizedTypeReference<ResponseTO<CustomerEntity>>() {
 				});
 		return workerResponse.getBody().getData();
 	}
